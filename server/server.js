@@ -8,8 +8,17 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// 허용된 프론트엔드 주소를 설정합니다.
+// हिंदी: Frontend के allowed URLs configure करता है।
+const allowedOrigins = [
+  'http://localhost:4200',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+// CORS 요청을 처리합니다.
+// हिंदी: Allowed frontend से आने वाली requests को अनुमति देता है।
 app.use(cors({
-  origin: 'http://localhost:4200'
+  origin: allowedOrigins
 }));
 
 // Gemini AI 클라이언트를 초기화합니다.

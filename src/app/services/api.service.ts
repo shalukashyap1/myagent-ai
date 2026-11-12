@@ -30,7 +30,7 @@ export interface ChatResponse {
 })
 export class ApiService {
 
-  private readonly apiUrl = 'http://localhost:3000/api';
+  private readonly apiUrl = 'https://myagent-ai.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
