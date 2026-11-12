@@ -1,0 +1,147 @@
+
+<div class="chat-page">
+
+  <!-- Chat Header -->
+  <header class="chat-header">
+
+    <button
+      type="button"
+      class="back-button"
+      (click)="back.emit()">
+      ← Back
+    </button>
+
+    <div class="agent-info">
+
+      <div class="agent-icon">🤖</div>
+
+      <div>
+        <h2>{{ agent.name }}</h2>
+        <small>{{ agent.role }}</small>
+      </div>
+
+    </div>
+
+    <span class="online-status">
+      ● {{ isLoading ? 'Thinking...' : 'Ready' }}
+    </span>
+
+  </header>
+
+  <!-- Chat Messages -->
+  <section class="chat-body">
+
+    @if (messages.length === 0) {
+
+      <div class="chat-welcome">
+        <span>🤖</span>
+        <h2>Hello! I'm {{ agent.name }}</h2>
+        <p>How can I help you today?</p>
+      </div>
+
+    }
+
+    @for (message of messages; track $index) {
+
+      <div
+        class="message-row"
+        [class.user-row]="message.role === 'user'">
+
+        <div class="message-bubble">
+
+          @if (message.role === 'assistant' && message.parts?.length) {
+
+            @for (part of message.parts; track $index) {
+
+              @if (part.type === 'text') {
+
+                <div
+                  class="markdown-content"
+                  [innerHTML]="part.html">
+                </div>
+
+              } @else {
+
+                <!-- Code Block -->
+                <div class="code-block-wrapper">
+
+                  <div class="code-block-header">
+
+                    <span>{{ part.language }}</span>
+
+                    <!-- Copy Button -->
+                    <button
+                      type="button"
+                      class="copy-code-btn"
+                      (click)="copyCode(part.content, $event)">
+                      Copy Code
+                    </button>
+
+                  </div>
+
+                  <pre><code
+                    class="hljs"
+                    [innerHTML]="part.highlightedHtml">
+                  </code></pre>
+
+                </div>
+
+              }
+
+            }
+
+          } @else {
+
+            {{ message.content }}
+
+          }
+
+        </div>
+
+      </div>
+
+    }
+
+    @if (isLoading) {
+
+      <div class="message-row">
+        <div class="message-bubble loading-message">
+          AI is thinking...
+        </div>
+      </div>
+
+    }
+
+    @if (errorMessage) {
+
+      <div class="error-message">
+        {{ errorMessage }}
+      </div>
+
+    }
+
+  </section>
+
+  <!-- Chat Input -->
+  <footer class="chat-footer">
+
+    <input
+      type="text"
+      [(ngModel)]="userMessage"
+      (keyup.enter)="sendMessage()"
+      placeholder="Type your message..."
+      [disabled]="isLoading"
+    />
+
+    <button
+      type="button"
+      (click)="sendMessage()"
+      [disabled]="isLoading || !userMessage.trim()">
+
+      {{ isLoading ? 'Thinking...' : 'Send' }}
+
+    </button>
+
+  </footer>
+
+</div>
