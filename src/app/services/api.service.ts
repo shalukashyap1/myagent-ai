@@ -76,7 +76,12 @@ export class ApiService {
 
   // 로컬 백엔드 주소입니다.
   // हिंदी: Local development में local backend से connect करता है।
-  private readonly apiUrl = 'http://localhost:3000/api';
+ // API 서버 주소입니다.
+// हिंदी: Local और Production के लिए सही Backend URL चुनता है।
+private readonly apiUrl =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : 'https://myagent-ai.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
