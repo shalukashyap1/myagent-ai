@@ -1,282 +1,311 @@
-@if (selectedAgent) {
 
+@if (selectedAgent) {
   <app-agent-chat
     [agent]="selectedAgent"
     (back)="closeChat()">
   </app-agent-chat>
-
 } @else {
-<div class="app-layout">
 
-  <!-- 사이드바: 왼쪽 메뉴 영역 -->
-  <!-- हिंदी: Sidebar का left menu section -->
-  <aside class="sidebar">
+  <div class="app-layout">
 
-    <div class="brand">
-      <span class="brand-icon">✦</span>
-      <span>MyAgent AI</span>
-    </div>
+    <!-- 사이드바: 왼쪽 메뉴 영역 -->
+    <!-- हिंदी: Sidebar का left menu section -->
+    <aside class="sidebar" [class.mobile-open]="isMobileMenuOpen">
 
-    <p class="menu-label">WORKSPACE</p>
+      <!-- 사이드바 헤더 -->
+      <!-- हिंदी: Sidebar का header और close button -->
+      <div class="sidebar-header">
 
-    <nav>
-      <a class="nav-item active">▦ Dashboard</a>
-
-      <a class="nav-item" (click)="openCreateAgent()">
-        ＋ Create Agent
-      </a>
-
-      <a class="nav-item">🤖 My Agents</a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="profile">
-        <div class="avatar">S</div>
-        <div>
-          <strong>Shalu</strong>
-          <small>Personal Workspace</small>
-        </div>
-      </div>
-    </div>
-
-  </aside>
-
-  <!-- 메인 콘텐츠: 메인 대시보드 -->
-  <!-- हिंदी: Main dashboard content -->
-  <main class="main-content">
-
-    <header class="topbar">
-      <span>My Workspace / Dashboard</span>
-      <div class="user-badge">S</div>
-    </header>
-
-    <section class="welcome-section">
-      <p class="eyebrow">YOUR PERSONAL AI WORKSPACE</p>
-      <h1>Build your own AI assistant.</h1>
-      <p>Create intelligent assistants tailored to your needs.</p>
-    </section>
-
-    <!-- 통계 카드: Dashboard statistics -->
-    <!-- हिंदी: Dashboard के statistics cards -->
-    <section class="stats-grid">
-
-      <div class="stat-card">
-        <span>🤖</span>
-        <p>Total Agents</p>
-        <h2>{{ agents.length }}</h2>
-      </div>
-
-      <div class="stat-card">
-        <span>💬</span>
-        <p>Total Conversations</p>
-        <h2>0</h2>
-      </div>
-
-      <!-- 백엔드 연결 상태 -->
-      <!-- हिंदी: Backend connection status -->
-      <div class="stat-card">
-        <span>⚡</span>
-        <p>Backend Status</p>
-
-        <h2
-          [class.ready]="backendConnected"
-          [class.disconnected]="!backendConnected">
-
-          {{ backendConnected ? 'Connected' : 'Disconnected' }}
-
-        </h2>
-
-        <small>{{ backendMessage }}</small>
-      </div>
-
-    </section>
-
-    <!-- 에이전트 생성 영역 -->
-    <!-- हिंदी: Agent creation section -->
-    <section class="create-section">
-
-      <div>
-        <span class="create-icon">✦</span>
-
-        <h2>
-          {{ agents.length === 0
-            ? 'Create your first AI Agent'
-            : 'Create another AI Agent' }}
-        </h2>
-
-        <p>
-          {{ agents.length === 0
-            ? 'Give your assistant a name, role and instructions.'
-            : 'Build another assistant for a different task.' }}
-        </p>
-      </div>
-
-      <button
-        class="create-button"
-        (click)="openCreateAgent()">
-        + Create Agent
-      </button>
-
-    </section>
-
-    <!-- 저장된 에이전트 목록 -->
-    <!-- हिंदी: Saved agents की list -->
-    <section class="agents-section">
-
-      <h2>My Agents</h2>
-
-      @if (agents.length === 0) {
-
-        <div class="empty-state">
-          <span>🤖</span>
-          <h3>No agents created yet</h3>
-          <p>Your AI assistants will appear here.</p>
-        </div>
-
-      } @else {
-
-        <div class="agent-list">
-
-          @for (agent of agents; track agent.id) {
-
-            <div class="agent-card" (click)="openChat(agent)">
-
-              <div class="agent-avatar">🤖</div>
-
-              <div class="agent-details">
-                <h3>{{ agent.name }}</h3>
-                <p>{{ agent.role }}</p>
-                <small>{{ agent.instructions }}</small>
-              </div>
-
-              <button
-                class="delete-button"
-                (click)="$event.stopPropagation(); deleteAgent(agent.id)">
-                Delete
-              </button>
-
-            </div>
-
-          }
-
-        </div>
-
-      }
-
-    </section>
-
-  </main>
-
-</div>
-
-
-<!-- 에이전트 생성 팝업 -->
-<!-- हिंदी: Agent creation popup -->
-@if (showCreateForm) {
-
-  <div class="modal-overlay">
-
-    <div class="agent-modal">
-
-      <div class="modal-header">
-        <div>
-          <h2>Create New AI Agent</h2>
-          <p>Configure your personal AI assistant.</p>
+        <div class="brand">
+          <span class="brand-icon">✦</span>
+          <span>MyAgent AI</span>
         </div>
 
         <button
-          class="close-button"
+          class="close-menu-button"
           type="button"
-          (click)="closeCreateAgent()">
-          ×
+          aria-label="Close menu"
+          (click)="closeMobileMenu()">
+          ✕
         </button>
+
       </div>
 
-      <form
-        [formGroup]="agentForm"
-        (ngSubmit)="createAgent()">
+      <p class="menu-label">WORKSPACE</p>
 
-        <!-- Agent Name -->
-        <div class="form-group">
+      <nav>
+        <a class="nav-item active" (click)="closeMobileMenu()">
+          ▦ Dashboard
+        </a>
 
-          <label>Agent Name</label>
+        <a class="nav-item" (click)="openCreateAgent()">
+          ＋ Create Agent
+        </a>
 
-          <input
-            type="text"
-            formControlName="name"
-            placeholder="e.g. My Coding Assistant">
+        <a class="nav-item" (click)="closeMobileMenu()">
+          🤖 My Agents
+        </a>
+      </nav>
 
-          @if (
-            agentForm.get('name')?.touched &&
-            agentForm.get('name')?.invalid
-          ) {
-            <small class="error-message">
-              Agent name is required (maximum 30 characters).
-            </small>
-          }
-
+      <div class="sidebar-bottom">
+        <div class="profile">
+          <div class="avatar">S</div>
+          <div>
+            <strong>Shalu</strong>
+            <small>Personal Workspace</small>
+          </div>
         </div>
+      </div>
 
-        <!-- Agent Role -->
-        <div class="form-group">
+    </aside>
 
-          <label>Choose Role</label>
+    <!-- 모바일 사이드바 배경 -->
+    <!-- हिंदी: Mobile sidebar का background overlay -->
+    @if (isMobileMenuOpen) {
+      <div
+        class="sidebar-overlay"
+        (click)="closeMobileMenu()">
+      </div>
+    }
 
-          <select formControlName="role">
-            <option value="Coding Assistant">Coding Assistant</option>
-            <option value="Personal Assistant">Personal Assistant</option>
-            <option value="Study Assistant">Study Assistant</option>
-            <option value="Research Assistant">Research Assistant</option>
-            <option value="Korean Language Assistant">Korean Language Assistant</option>
-            <option value="Custom Assistant">Custom Assistant</option>
-          </select>
+    <!-- 메인 콘텐츠 -->
+    <!-- हिंदी: Main dashboard content -->
+    <main class="main-content">
 
-        </div>
+      <header class="topbar">
 
-        <!-- Agent Instructions -->
-        <div class="form-group">
-
-          <label>Custom Instructions</label>
-
-          <textarea
-            formControlName="instructions"
-            rows="4"
-            placeholder="Tell your AI agent what it should do...">
-          </textarea>
-
-          @if (
-            agentForm.get('instructions')?.touched &&
-            agentForm.get('instructions')?.invalid
-          ) {
-            <small class="error-message">
-              Instructions are required (minimum 10 characters).
-            </small>
-          }
-
-        </div>
-
-        <div class="modal-actions">
+        <div class="topbar-left">
 
           <button
+            class="menu-toggle"
             type="button"
-            class="cancel-button"
-            (click)="closeCreateAgent()">
-            Cancel
+            (click)="toggleMobileMenu()"
+            aria-label="Toggle navigation menu">
+            ☰
           </button>
 
-          <button
-            type="submit"
-            class="create-button">
-            Create Agent
-          </button>
+          <span>My Workspace / Dashboard</span>
 
         </div>
 
-      </form>
+        <div class="user-badge">S</div>
 
-    </div>
+      </header>
+
+      <section class="welcome-section">
+        <p class="eyebrow">YOUR PERSONAL AI WORKSPACE</p>
+        <h1>Build your own AI assistant.</h1>
+        <p>Create intelligent assistants tailored to your needs.</p>
+      </section>
+
+      <!-- 통계 카드 -->
+      <!-- हिंदी: Dashboard statistics cards -->
+      <section class="stats-grid">
+
+        <div class="stat-card">
+          <span>🤖</span>
+          <p>Total Agents</p>
+          <h2>{{ agents.length }}</h2>
+        </div>
+
+        <div class="stat-card">
+          <span>💬</span>
+          <p>Total Conversations</p>
+          <h2>0</h2>
+        </div>
+
+        <div class="stat-card">
+          <span>⚡</span>
+          <p>Backend Status</p>
+
+          <h2
+            [class.ready]="backendConnected"
+            [class.disconnected]="!backendConnected">
+            {{ backendConnected ? 'Connected' : 'Disconnected' }}
+          </h2>
+
+          <small>{{ backendMessage }}</small>
+        </div>
+
+      </section>
+
+      <!-- 에이전트 생성 영역 -->
+      <!-- हिंदी: Agent creation section -->
+      <section class="create-section">
+
+        <div>
+          <span class="create-icon">✦</span>
+
+          <h2>
+            {{ agents.length === 0
+              ? 'Create your first AI Agent'
+              : 'Create another AI Agent' }}
+          </h2>
+
+          <p>
+            {{ agents.length === 0
+              ? 'Give your assistant a name, role and instructions.'
+              : 'Build another assistant for a different task.' }}
+          </p>
+        </div>
+
+        <button
+          class="create-button"
+          (click)="openCreateAgent()">
+          + Create Agent
+        </button>
+
+      </section>
+
+      <!-- 저장된 에이전트 목록 -->
+      <!-- हिंदी: Saved agents की list -->
+      <section class="agents-section">
+
+        <h2>My Agents</h2>
+
+        @if (agents.length === 0) {
+
+          <div class="empty-state">
+            <span>🤖</span>
+            <h3>No agents created yet</h3>
+            <p>Your AI assistants will appear here.</p>
+          </div>
+
+        } @else {
+
+          <div class="agent-list">
+
+            @for (agent of agents; track agent.id) {
+
+              <div class="agent-card" (click)="openChat(agent)">
+
+                <div class="agent-avatar">🤖</div>
+
+                <div class="agent-details">
+                  <h3>{{ agent.name }}</h3>
+                  <p>{{ agent.role }}</p>
+                  <small>{{ agent.instructions }}</small>
+                </div>
+
+                <button
+                  class="delete-button"
+                  (click)="$event.stopPropagation(); deleteAgent(agent.id)">
+                  Delete
+                </button>
+
+              </div>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
+
+    </main>
 
   </div>
 
-}
+  <!-- 에이전트 생성 팝업 -->
+  <!-- हिंदी: Agent creation popup -->
+  @if (showCreateForm) {
+
+    <div class="modal-overlay">
+
+      <div class="agent-modal">
+
+        <div class="modal-header">
+          <div>
+            <h2>Create New AI Agent</h2>
+            <p>Configure your personal AI assistant.</p>
+          </div>
+
+          <button
+            class="close-button"
+            type="button"
+            (click)="closeCreateAgent()">
+            ×
+          </button>
+        </div>
+
+        <form
+          [formGroup]="agentForm"
+          (ngSubmit)="createAgent()">
+
+          <div class="form-group">
+            <label>Agent Name</label>
+
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="e.g. My Coding Assistant">
+
+            @if (
+              agentForm.get('name')?.touched &&
+              agentForm.get('name')?.invalid
+            ) {
+              <small class="error-message">
+                Agent name is required (maximum 30 characters).
+              </small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Choose Role</label>
+
+            <select formControlName="role">
+              <option value="Coding Assistant">Coding Assistant</option>
+              <option value="Personal Assistant">Personal Assistant</option>
+              <option value="Study Assistant">Study Assistant</option>
+              <option value="Research Assistant">Research Assistant</option>
+              <option value="Korean Language Assistant">Korean Language Assistant</option>
+              <option value="Custom Assistant">Custom Assistant</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Custom Instructions</label>
+
+            <textarea
+              formControlName="instructions"
+              rows="4"
+              placeholder="Tell your AI agent what it should do...">
+            </textarea>
+
+            @if (
+              agentForm.get('instructions')?.touched &&
+              agentForm.get('instructions')?.invalid
+            ) {
+              <small class="error-message">
+                Instructions are required (minimum 10 characters).
+              </small>
+            }
+          </div>
+
+          <div class="modal-actions">
+
+            <button
+              type="button"
+              class="cancel-button"
+              (click)="closeCreateAgent()">
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              class="create-button">
+              Create Agent
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  }
+
 }

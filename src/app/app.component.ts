@@ -1,8 +1,15 @@
+
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js';
+
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 import { ApiService } from './services/api.service';
 import { AgentChatComponent } from './pages/agent-chat/agent-chat.component';
@@ -15,6 +22,7 @@ interface Agent {
   role: string;
   instructions: string;
 }
+
 // 코드 문법 강조 기능을 설정합니다.
 // हिंदी: Code की syntax highlighting configure करता है।
 marked.use(
@@ -52,24 +60,28 @@ marked.use(
 export class AppComponent implements OnInit {
 
   // 선택한 에이전트
-  // हिंदी: Selected Agent को store करता है
+  // हिंदी: Selected Agent को store करता है।
   selectedAgent: Agent | null = null;
 
   // 백엔드 연결 상태
-  // हिंदी: Backend connection status
+  // हिंदी: Backend connection status।
   backendConnected = false;
   backendMessage = 'Checking connection...';
 
   // 저장된 에이전트 목록
-  // हिंदी: सभी saved agents की list
+  // हिंदी: सभी saved agents की list।
   agents: Agent[] = [];
 
   // 에이전트 생성 팝업 상태
-  // हिंदी: Agent creation popup की visibility
+  // हिंदी: Agent creation popup की visibility।
   showCreateForm = false;
 
+  // 모바일 메뉴 상태
+  // हिंदी: Mobile menu की open और close स्थिति।
+  isMobileMenuOpen = false;
+
   // 에이전트 생성 폼
-  // हिंदी: Agent बनाने का form
+  // हिंदी: Agent बनाने का form।
   agentForm: FormGroup;
 
   constructor(
@@ -104,6 +116,18 @@ export class AppComponent implements OnInit {
     this.checkBackendConnection();
   }
 
+  // 모바일 메뉴를 열거나 닫습니다.
+  // हिंदी: Mobile menu को open या close करता है।
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  // 모바일 메뉴를 닫습니다.
+  // हिंदी: Mobile menu को बंद करता है।
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
+  }
+
   // 백엔드 연결을 확인합니다.
   // हिंदी: Backend connection check करता है।
   checkBackendConnection(): void {
@@ -127,6 +151,7 @@ export class AppComponent implements OnInit {
   // 에이전트 생성 폼을 엽니다.
   // हिंदी: Agent creation popup खोलता है।
   openCreateAgent(): void {
+    this.closeMobileMenu();
     this.showCreateForm = true;
   }
 
@@ -224,6 +249,7 @@ export class AppComponent implements OnInit {
   // 선택한 에이전트의 채팅을 엽니다.
   // हिंदी: Selected Agent का chat खोलता है।
   openChat(agent: Agent): void {
+    this.closeMobileMenu();
     this.selectedAgent = agent;
   }
 
@@ -232,5 +258,6 @@ export class AppComponent implements OnInit {
   closeChat(): void {
     this.selectedAgent = null;
   }
+
 
 }
