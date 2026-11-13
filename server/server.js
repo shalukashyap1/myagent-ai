@@ -9,11 +9,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // 허용된 프론트엔드 주소를 설정합니다.
-// हिंदी: Frontend के allowed URLs configure करता है।
+// हिंदी: Local और live frontend URLs को allow करता है।
 const allowedOrigins = [
   'http://localhost:4200',
-  process.env.FRONTEND_URL
-].filter(Boolean);
+  'https://myagent-ai-rosy.vercel.app'
+];
 
 // CORS 요청을 처리합니다.
 // हिंदी: Allowed frontend से आने वाली requests को अनुमति देता है।
