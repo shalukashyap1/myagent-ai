@@ -14,13 +14,13 @@ import {
 import { interval } from 'rxjs';
 import { SwUpdate } from '@angular/service-worker';
 
-import { ApiService } from './services/api.service';
+import { ApiService, MongoAgent } from './services/api.service';
 import { AgentChatComponent } from './pages/agent-chat/agent-chat.component';
 
 // 에이전트 정보 구조
 // हिंदी: Agent की information का structure
 interface Agent {
-  id: number;
+  id: string;
   name: string;
   role: string;
   instructions: string;
@@ -67,9 +67,18 @@ export class AppComponent implements OnInit {
 
   showCreateForm = false;
 
+  // 수정할 에이전트 ID를 저장합니다.
+  // हिंदी: जिस Agent को edit करना है उसकी ID रखता है।
+  editingAgentId: string | null = null;
+
   isMobileMenuOpen = false;
 
   agentForm: FormGroup;
+
+  // 에이전트 작업 상태를 관리합니다.
+  // हिंदी: Agent API operations की loading और error state रखता है।
+  isAgentsLoading = false;
+  agentErrorMessage = '';
 
   // 업데이트 알림 중복 표시를 방지합니다.
   // हिंदी: Update notification बार-बार दिखने से रोकता है।
@@ -219,6 +228,10 @@ export class AppComponent implements OnInit {
       next: (response) => {
         this.backendConnected = response.success;
         this.backendMessage = response.message;
+
+        if (response.database !== 'Connected') {
+          this.backendMessage = 'Backend connected, database disconnected';
+        }
       },
 
       error: () => {
@@ -231,17 +244,47 @@ export class AppComponent implements OnInit {
   }
 
   // 에이전트 생성 폼을 엽니다.
-  // हिंदी: Agent creation popup खोलता है।
+  // हिंदी: नया Agent create करने का popup खोलता है।
   openCreateAgent(): void {
+
     this.closeMobileMenu();
+    this.agentErrorMessage = '';
+    this.editingAgentId = null;
+
+    this.agentForm.reset({
+      name: '',
+      role: 'Coding Assistant',
+      instructions: ''
+    });
+
     this.showCreateForm = true;
   }
 
-  // 에이전트 생성 폼을 닫습니다.
-  // हिंदी: Agent creation popup बंद करता है।
+  // 에이전트 수정 폼을 엽니다.
+  // हिंदी: Existing Agent की details edit form में खोलता है।
+  editAgent(agent: Agent): void {
+
+    this.closeMobileMenu();
+    this.agentErrorMessage = '';
+
+    this.editingAgentId = agent.id;
+
+    this.agentForm.patchValue({
+      name: agent.name,
+      role: agent.role,
+      instructions: agent.instructions
+    });
+
+    this.showCreateForm = true;
+  }
+
+  // 에이전트 생성 및 수정 폼을 닫습니다.
+  // हिंदी: Create और Edit form को बंद करता है।
   closeCreateAgent(): void {
 
     this.showCreateForm = false;
+    this.editingAgentId = null;
+    this.agentErrorMessage = '';
 
     this.agentForm.reset({
       name: '',
@@ -251,8 +294,8 @@ export class AppComponent implements OnInit {
 
   }
 
-  // 새로운 에이전트를 생성합니다.
-  // हिंदी: नया Agent create करता है।
+  // 새로운 에이전트를 생성하거나 기존 에이전트를 수정합니다.
+  // हिंदी: नया Agent create या existing Agent update करता है।
   createAgent(): void {
 
     if (this.agentForm.invalid) {
@@ -262,8 +305,191 @@ export class AppComponent implements OnInit {
 
     const formValue = this.agentForm.getRawValue();
 
+    const agentData = {
+      name: formValue.name.trim(),
+      role: formValue.role.trim(),
+      instructions: formValue.instructions.trim()
+    };
+
+    this.agentErrorMessage = '';
+
+    // 수정 모드이면 기존 Agent를 업데이트합니다.
+    // हिंदी: Edit mode होने पर existing Agent update करता है।
+    if (this.editingAgentId) {
+
+      const agentId = this.editingAgentId;
+
+      this.apiService.updateAgent(agentId, agentData).subscribe({
+
+        next: (response) => {
+
+          if (response.success) {
+
+            const updatedAgent = this.mapMongoAgent(response.agent);
+
+            this.agents = this.agents.map(agent =>
+              agent.id === agentId ? updatedAgent : agent
+            );
+
+            // 현재 채팅 중인 Agent도 업데이트합니다.
+            // हिंदी: Open chat वाले Agent की details भी update करता है।
+            if (this.selectedAgent?.id === agentId) {
+              this.selectedAgent = updatedAgent;
+            }
+
+            this.closeCreateAgent();
+          }
+
+        },
+
+        error: (error) => {
+
+          console.error('Update Agent Error:', error);
+
+          this.agentErrorMessage =
+            error.error?.message || 'Unable to update agent. Please try again.';
+
+        }
+
+      });
+
+      return;
+    }
+
+    // 새로운 Agent를 MongoDB에 저장합니다.
+    // हिंदी: नया Agent MongoDB में save करता है।
+    this.apiService.createAgent(agentData).subscribe({
+
+      next: (response) => {
+
+        if (response.success) {
+
+          const savedAgent = this.mapMongoAgent(response.agent);
+
+          this.agents = [savedAgent, ...this.agents];
+
+          this.closeCreateAgent();
+        }
+
+      },
+
+      error: (error) => {
+
+        console.error('Create Agent Error:', error);
+
+        this.agentErrorMessage =
+          error.error?.message || 'Unable to create agent. Please try again.';
+
+      }
+
+    });
+
+  }
+
+  // MongoDB Agent를 frontend Agent 구조로 변환합니다.
+  // हिंदी: MongoDB के Agent को frontend के Agent structure में बदलता है।
+  private mapMongoAgent(agent: MongoAgent): Agent {
+
+    return {
+      id: agent._id,
+      name: agent.name,
+      role: agent.role,
+      instructions: agent.instructions
+    };
+
+  }
+
+  // MongoDB에서 저장된 에이전트를 가져옵니다.
+  // हिंदी: MongoDB से saved Agents की list load करता है।
+  loadAgents(): void {
+
+    this.isAgentsLoading = true;
+    this.agentErrorMessage = '';
+
+    this.apiService.getAgents().subscribe({
+
+      next: (response) => {
+
+        this.agents = response.agents.map(
+          agent => this.mapMongoAgent(agent)
+        );
+
+        this.isAgentsLoading = false;
+
+      },
+
+      error: (error) => {
+
+        console.error('Load Agents Error:', error);
+
+        this.agentErrorMessage =
+          error.error?.message || 'Unable to load agents.';
+
+        this.isAgentsLoading = false;
+
+      }
+
+    });
+
+  }
+
+  // 에이전트를 MongoDB에서 삭제합니다.
+  // हिंदी: MongoDB database से Agent delete करता है।
+  deleteAgent(id: string): void {
+
+    this.agentErrorMessage = '';
+
+    this.apiService.deleteAgent(id).subscribe({
+
+      next: (response) => {
+
+        if (response.success) {
+
+          this.agents = this.agents.filter(
+            agent => agent.id !== id
+          );
+
+          if (this.selectedAgent?.id === id) {
+            this.closeChat();
+          }
+
+        }
+
+      },
+
+      error: (error) => {
+
+        console.error('Delete Agent Error:', error);
+
+        this.agentErrorMessage =
+          error.error?.message || 'Unable to delete agent.';
+
+      }
+
+    });
+
+  }
+
+  /*
+  ============================================================
+  OLD LOCAL STORAGE APPROACH
+  हिंदी: यह पुराना code study के लिए comment किया गया है।
+  ============================================================
+
+  // पुराने तरीके से नया Agent create करना।
+  // हिंदी: पहले Agent को केवल browser में save किया जाता था।
+
+  createAgentUsingLocalStorage(): void {
+
+    if (this.agentForm.invalid) {
+      this.agentForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.agentForm.getRawValue();
+
     const newAgent: Agent = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: formValue.name.trim(),
       role: formValue.role,
       instructions: formValue.instructions.trim()
@@ -271,15 +497,15 @@ export class AppComponent implements OnInit {
 
     this.agents = [...this.agents, newAgent];
 
-    this.saveAgents();
+    this.saveAgentsUsingLocalStorage();
 
     this.closeCreateAgent();
-
   }
 
   // 에이전트 목록을 LocalStorage에 저장합니다.
   // हिंदी: Agent list को browser LocalStorage में save करता है।
-  saveAgents(): void {
+
+  saveAgentsUsingLocalStorage(): void {
 
     localStorage.setItem(
       'my-agents',
@@ -288,9 +514,10 @@ export class AppComponent implements OnInit {
 
   }
 
-  // 저장된 에이전트를 불러옵니다.
-  // हिंदी: पहले से saved Agents को load करता है।
-  loadAgents(): void {
+  // 저장된 에이전트를 LocalStorage에서 불러옵니다.
+  // हिंदी: Browser LocalStorage से Agents load करता है।
+
+  loadAgentsUsingLocalStorage(): void {
 
     const savedAgents = localStorage.getItem('my-agents');
 
@@ -306,15 +533,16 @@ export class AppComponent implements OnInit {
 
   }
 
-  // 에이전트를 삭제합니다.
-  // हिंदी: Agent को delete करता है।
-  deleteAgent(id: number): void {
+  // LocalStorage에서 Agent를 삭제합니다.
+  // हिंदी: Browser LocalStorage से Agent delete करता है।
+
+  deleteAgentUsingLocalStorage(id: string): void {
 
     this.agents = this.agents.filter(
       agent => agent.id !== id
     );
 
-    this.saveAgents();
+    this.saveAgentsUsingLocalStorage();
 
     if (this.selectedAgent?.id === id) {
       this.closeChat();
@@ -322,17 +550,26 @@ export class AppComponent implements OnInit {
 
   }
 
+  ============================================================
+  END OF OLD LOCAL STORAGE APPROACH
+  ============================================================
+  */
+
   // 선택한 에이전트의 채팅을 엽니다.
   // हिंदी: Selected Agent का chat खोलता है।
   openChat(agent: Agent): void {
+
     this.closeMobileMenu();
     this.selectedAgent = agent;
+
   }
 
   // 대시보드로 돌아갑니다.
   // हिंदी: Chat से वापस Dashboard पर जाता है।
   closeChat(): void {
+
     this.selectedAgent = null;
+
   }
 
 }

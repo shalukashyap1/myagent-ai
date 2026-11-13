@@ -56,7 +56,7 @@ interface ChatMessage {
 }
 
 interface Agent {
-  id: number;
+  id: string;
   name: string;
   role: string;
   instructions: string;

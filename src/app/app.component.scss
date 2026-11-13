@@ -653,3 +653,25 @@ nav {
     display: flex;
   }
 }
+.agent-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.edit-button {
+  padding: 6px 16px;
+  border: 1px solid #6366f1;
+  border-radius: 8px;
+  background: transparent;
+  color: #6366f1;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.edit-button:hover {
+  background: #6366f1;
+  color: #ffffff;
+}

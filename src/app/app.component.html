@@ -12,8 +12,6 @@
     <!-- हिंदी: Sidebar का left menu section -->
     <aside class="sidebar" [class.mobile-open]="isMobileMenuOpen">
 
-      <!-- 사이드바 헤더 -->
-      <!-- हिंदी: Sidebar का header और close button -->
       <div class="sidebar-header">
 
         <div class="brand">
@@ -151,6 +149,7 @@
 
         <button
           class="create-button"
+          type="button"
           (click)="openCreateAgent()">
           + Create Agent
         </button>
@@ -163,7 +162,13 @@
 
         <h2>My Agents</h2>
 
-        @if (agents.length === 0) {
+        @if (isAgentsLoading) {
+
+          <div class="empty-state">
+            <p>Loading agents...</p>
+          </div>
+
+        } @else if (agents.length === 0) {
 
           <div class="empty-state">
             <span>🤖</span>
@@ -177,7 +182,9 @@
 
             @for (agent of agents; track agent.id) {
 
-              <div class="agent-card" (click)="openChat(agent)">
+              <div
+                class="agent-card"
+                (click)="openChat(agent)">
 
                 <div class="agent-avatar">🤖</div>
 
@@ -187,11 +194,27 @@
                   <small>{{ agent.instructions }}</small>
                 </div>
 
-                <button
-                  class="delete-button"
-                  (click)="$event.stopPropagation(); deleteAgent(agent.id)">
-                  Delete
-                </button>
+                <div class="agent-actions">
+
+                  <!-- 에이전트 수정 버튼 -->
+                  <!-- हिंदी: Agent edit button -->
+                  <button
+                    class="edit-button"
+                    type="button"
+                    (click)="$event.stopPropagation(); editAgent(agent)">
+                    Edit
+                  </button>
+
+                  <!-- 에이전트 삭제 버튼 -->
+                  <!-- हिंदी: Agent delete button -->
+                  <button
+                    class="delete-button"
+                    type="button"
+                    (click)="$event.stopPropagation(); deleteAgent(agent.id)">
+                    Delete
+                  </button>
+
+                </div>
 
               </div>
 
@@ -207,8 +230,8 @@
 
   </div>
 
-  <!-- 에이전트 생성 팝업 -->
-  <!-- हिंदी: Agent creation popup -->
+  <!-- 에이전트 생성 및 수정 팝업 -->
+  <!-- हिंदी: Agent create और edit popup -->
   @if (showCreateForm) {
 
     <div class="modal-overlay">
@@ -216,9 +239,17 @@
       <div class="agent-modal">
 
         <div class="modal-header">
+
           <div>
-            <h2>Create New AI Agent</h2>
-            <p>Configure your personal AI assistant.</p>
+            <h2>
+              {{ editingAgentId ? 'Edit AI Agent' : 'Create New AI Agent' }}
+            </h2>
+
+            <p>
+              {{ editingAgentId
+                ? 'Update your AI assistant details.'
+                : 'Configure your personal AI assistant.' }}
+            </p>
           </div>
 
           <button
@@ -227,6 +258,7 @@
             (click)="closeCreateAgent()">
             ×
           </button>
+
         </div>
 
         <form
@@ -234,6 +266,7 @@
           (ngSubmit)="createAgent()">
 
           <div class="form-group">
+
             <label>Agent Name</label>
 
             <input
@@ -249,9 +282,11 @@
                 Agent name is required (maximum 30 characters).
               </small>
             }
+
           </div>
 
           <div class="form-group">
+
             <label>Choose Role</label>
 
             <select formControlName="role">
@@ -262,9 +297,11 @@
               <option value="Korean Language Assistant">Korean Language Assistant</option>
               <option value="Custom Assistant">Custom Assistant</option>
             </select>
+
           </div>
 
           <div class="form-group">
+
             <label>Custom Instructions</label>
 
             <textarea
@@ -281,7 +318,16 @@
                 Instructions are required (minimum 10 characters).
               </small>
             }
+
           </div>
+
+          <!-- API error message -->
+          <!-- हिंदी: Backend से आने वाला error message -->
+          @if (agentErrorMessage) {
+            <div class="error-message">
+              {{ agentErrorMessage }}
+            </div>
+          }
 
           <div class="modal-actions">
 
@@ -295,7 +341,9 @@
             <button
               type="submit"
               class="create-button">
-              Create Agent
+
+              {{ editingAgentId ? 'Save Changes' : 'Create Agent' }}
+
             </button>
 
           </div>
