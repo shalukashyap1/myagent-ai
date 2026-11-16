@@ -135,6 +135,15 @@
 
     </aside>
 
+      <!-- Mobile Sidebar Overlay -->
+      <!-- हिंदी: Sidebar open होने पर पीछे का overlay -->
+      @if (!isSidebarCollapsed) {
+        <div
+          class="mobile-sidebar-overlay"
+          (click)="closeSidebar()">
+        </div>
+      }
+
     <!-- Right Chat Section -->
     <main class="chat-main">
 

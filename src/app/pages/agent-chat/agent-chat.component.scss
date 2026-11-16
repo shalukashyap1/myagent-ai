@@ -1109,3 +1109,113 @@
     transform: none;
   }
 }
+
+
+/* =========================================
+   MOBILE SIDEBAR DRAWER
+   हिंदी: Mobile पर sidebar पूरी तरह hide/show होगी
+========================================= */
+
+@media (max-width: 600px) {
+
+  .chat-layout {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Sidebar को mobile drawer बनाता है */
+  .chat-sidebar {
+    position: fixed;
+    top: 62px;
+    left: 0;
+    bottom: 0;
+
+    width: 280px !important;
+    min-width: 280px !important;
+
+    height: calc(100dvh - 62px);
+    padding: 16px 14px;
+
+    background: #ffffff;
+    z-index: 1002;
+
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+
+    box-shadow: 8px 0 25px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Default closed: sidebar पूरी तरह screen से बाहर */
+  .sidebar-collapsed .chat-sidebar {
+    width: 280px !important;
+    min-width: 280px !important;
+
+    transform: translateX(-100%);
+
+    padding: 16px 14px;
+  }
+
+  /* Mobile पर compact icons नहीं दिखेंगे */
+  .sidebar-collapsed .sidebar-label,
+  .sidebar-collapsed .history-heading,
+  .sidebar-collapsed .history-item-content,
+  .sidebar-collapsed .empty-history,
+  .sidebar-collapsed .history-loading,
+  .sidebar-collapsed .history-icon {
+    display: initial;
+  }
+
+  .sidebar-collapsed .history-heading {
+    display: flex;
+  }
+
+  .sidebar-collapsed .history-item-wrapper {
+    justify-content: initial;
+  }
+
+  .sidebar-collapsed .history-item-wrapper .history-item {
+    width: auto;
+    min-height: auto;
+    flex: 1;
+  }
+
+  .sidebar-collapsed .new-chat-button {
+    justify-content: center;
+    padding: 13px;
+  }
+
+  .sidebar-collapsed .chat-sidebar .back-button {
+    justify-content: flex-start;
+    padding: 12px;
+  }
+
+  /* Overlay */
+  .mobile-sidebar-overlay {
+    position: fixed;
+    inset: 62px 0 0;
+
+    z-index: 1001;
+
+    background: rgba(20, 20, 40, 0.4);
+    animation: overlayFade 0.25s ease;
+  }
+
+  /* Chat हमेशा full width में रहेगा */
+  .chat-main {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+  }
+
+}
+
+@keyframes overlayFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+

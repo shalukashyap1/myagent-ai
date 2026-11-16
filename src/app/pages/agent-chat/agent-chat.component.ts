@@ -108,11 +108,21 @@ export class AgentChatComponent implements OnInit {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
-  // 컴포넌트가 시작될 때 대화 목록을 불러옵니다.
-  // हिंदी: Chat component खुलने पर उस Agent की history लाता है।
-  ngOnInit(): void {
-    this.loadConversations();
+  // 모바일 sidebar를 닫습니다.
+  // हिंदी: Mobile sidebar को बंद करता है।
+  closeSidebar(): void {
+    this.isSidebarCollapsed = true;
   }
+  
+
+  ngOnInit(): void {
+
+  // 모바일에서는 sidebar를 기본적으로 닫습니다.
+  // हिंदी: Mobile पर sidebar default रूप से बंद रहेगी।
+  this.isSidebarCollapsed = window.innerWidth <= 600;
+
+  this.loadConversations();
+}
 
   // 해당 Agent의 모든 대화를 가져옵니다.
   // हिंदी: Current Agent की सभी conversations load करता है।
