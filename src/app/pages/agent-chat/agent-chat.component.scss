@@ -1,28 +1,62 @@
 
+/* =========================================
+   MAIN CHAT PAGE
+   हिंदी: पूरे Chat page की basic styling
+========================================= */
+
 .chat-page {
-  height: calc(100vh - 20px);
+  height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: #f7f8fc;
-  border-radius: 12px;
+  color: #20243a;
   overflow: hidden;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+/* =========================================
+   HEADER
+   हिंदी: ऊपर Agent का नाम और status
+========================================= */
 
 .chat-header {
+  height: 72px;
+  min-height: 72px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 16px 24px;
-  background: white;
+  gap: 16px;
+  padding: 0 12px;
+  background: #ffffff;
   border-bottom: 1px solid #ececf2;
+  z-index: 2;
+  flex-shrink: 0;
 }
 
-.back-button {
-  padding: 9px 14px;
+.sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
   border: 1px solid #e5e5ed;
-  border-radius: 8px;
-  background: white;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #303047;
+  font-size: 20px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background: #f0edff;
+  color: #7664e8;
+  border-color: #7664e8;
 }
 
 .agent-info {
@@ -30,59 +64,358 @@
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .agent-icon {
-  width: 42px;
-  height: 42px;
+  width: 43px;
+  height: 43px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  flex-shrink: 0;
+  border-radius: 12px;
   background: #f0edff;
-  font-size: 22px;
+  font-size: 23px;
 }
 
 .agent-info h2 {
   margin: 0 0 4px;
   font-size: 16px;
+  color: #20243a;
+  overflow-wrap: anywhere;
 }
 
 .agent-info small {
   color: #85899b;
+  font-size: 12px;
 }
 
 .online-status {
   color: #16a36a;
   font-size: 13px;
+  white-space: nowrap;
 }
+
+/* =========================================
+   MAIN LAYOUT
+   हिंदी: Sidebar और Chat को side-by-side रखता है
+========================================= */
+
+.chat-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* =========================================
+   LEFT SIDEBAR
+   हिंदी: Chat History वाला left menu
+========================================= */
+
+.chat-sidebar {
+  width: 280px;
+  min-width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  gap: 12px;
+  background: #ffffff;
+  border-right: 1px solid #ececf2;
+  overflow-y: auto;
+  transition:
+    width 0.25s ease,
+    min-width 0.25s ease,
+    padding 0.25s ease;
+}
+
+/* =========================================
+   NEW CHAT BUTTON
+   हिंदी: नई Chat शुरू करने का button
+========================================= */
+
+.new-chat-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  background: #7664e8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-chat-button:hover {
+  background: #5d48d5;
+  transform: translateY(-1px);
+}
+
+.new-chat-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.new-chat-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* =========================================
+   CHAT HISTORY
+   हिंदी: पुरानी conversations की heading
+========================================= */
+
+.history-heading {
+  padding: 12px 5px 2px;
+}
+
+.history-heading h3 {
+  margin: 0;
+  color: #303047;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.history-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #303047;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-item:hover {
+  background: #f7f5ff;
+}
+
+.history-item.active {
+  background: #f0edff;
+  border-color: #d9d1ff;
+  color: #6653d6;
+}
+
+.history-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+}
+
+.history-title {
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item small {
+  color: #85899b;
+  font-size: 10px;
+}
+
+.history-icon {
+  display: none;
+  flex-shrink: 0;
+  font-size: 17px;
+}
+
+.empty-history,
+.history-loading {
+  padding: 12px 5px;
+  color: #85899b;
+  font-size: 12px;
+}
+
+.empty-history span {
+  font-size: 22px;
+}
+
+/* =========================================
+   BACK BUTTON AT BOTTOM
+   हिंदी: Sidebar के सबसे नीचे Back button
+========================================= */
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #ececf2;
+}
+
+.chat-sidebar .back-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 11px;
+  padding: 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #55556b;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chat-sidebar .back-button:hover {
+  background: #f0edff;
+  color: #6653d6;
+}
+
+.back-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+/* =========================================
+   COLLAPSED SIDEBAR
+   हिंदी: Sidebar बंद होने पर compact menu
+========================================= */
+
+.sidebar-collapsed .chat-sidebar {
+  width: 72px;
+  min-width: 72px;
+  padding-left: 10px;
+  padding-right: 10px;
+  align-items: stretch;
+}
+
+.sidebar-collapsed .sidebar-label,
+.sidebar-collapsed .history-heading,
+.sidebar-collapsed .history-item-content,
+.sidebar-collapsed .empty-history,
+.sidebar-collapsed .history-loading {
+  display: none;
+}
+
+.sidebar-collapsed .new-chat-button {
+  justify-content: center;
+  padding: 13px 5px;
+}
+
+.sidebar-collapsed .history-list {
+  align-items: center;
+}
+
+.sidebar-collapsed .history-item {
+  width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  padding: 8px;
+}
+
+.sidebar-collapsed .history-icon {
+  display: inline-block;
+}
+
+.sidebar-collapsed .chat-sidebar .back-button {
+  justify-content: center;
+  padding: 12px 5px;
+}
+
+/* =========================================
+   RIGHT CHAT SECTION
+   हिंदी: Main chat area
+========================================= */
+
+.chat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f7f8fc;
+  overflow: hidden;
+}
+
+/* =========================================
+   CHAT BODY
+   हिंदी: Messages दिखाने वाला area
+========================================= */
 
 .chat-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 25px;
+  padding: 30px 25px;
+  scroll-behavior: smooth;
 }
 
+/* =========================================
+   WELCOME SCREEN
+   हिंदी: नई Chat का welcome screen
+========================================= */
+
 .chat-welcome {
-  height: 100%;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding: 25px;
 }
 
-.chat-welcome span {
-  font-size: 48px;
+.welcome-icon {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 22px;
+  background: #f0edff;
+  font-size: 36px;
+}
+
+.chat-welcome h2 {
+  margin: 0 0 10px;
+  color: #20243a;
+  font-size: 24px;
 }
 
 .chat-welcome p {
-  color: #85899b;
+  margin: 0 0 8px;
+  color: #7664e8;
+  font-size: 14px;
 }
 
+.chat-welcome span {
+  color: #85899b;
+  font-size: 14px;
+}
+
+/* =========================================
+   MESSAGES
+   हिंदी: User और AI messages की styling
+========================================= */
+
 .message-row {
+  width: 100%;
+  max-width: 850px;
   display: flex;
-  margin-bottom: 16px;
+  margin: 0 auto 22px;
 }
 
 .user-row {
@@ -90,53 +423,20 @@
 }
 
 .message-bubble {
-  max-width: 85%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: white;
+  max-width: 90%;
+  padding: 14px 17px;
+  border-radius: 15px;
+  background: #ffffff;
   color: #20243a;
-  line-height: 1.6;
+  line-height: 1.7;
   overflow-wrap: anywhere;
+  box-shadow: 0 2px 8px rgba(30, 30, 70, 0.04);
 }
 
 .user-row .message-bubble {
   background: #7664e8;
-  color: white;
-}
-
-.chat-footer {
-  display: flex;
-  gap: 12px;
-  padding: 18px 24px;
-  background: white;
-  border-top: 1px solid #ececf2;
-}
-
-.chat-footer input {
-  flex: 1;
-  min-width: 0;
-  padding: 13px;
-  border: 1px solid #dedfea;
-  border-radius: 9px;
-  outline: none;
-}
-
-.chat-footer input:focus {
-  border-color: #7664e8;
-}
-
-.chat-footer button {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 9px;
-  background: #7664e8;
-  color: white;
-  cursor: pointer;
-}
-
-.chat-footer button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  color: #ffffff;
+  border-bottom-right-radius: 5px;
 }
 
 .loading-message {
@@ -144,109 +444,209 @@
   font-style: italic;
 }
 
-.error-message {
-  color: #dc2626;
-  padding: 10px;
-}
-
-/* 코드 블록의 전체 컨테이너 */
-/* हिंदी: Code block का पूरा container */
-.markdown-content .code-block-wrapper {
-  position: relative;
-  width: 100%;
-  margin: 20px 0;
-  background: #0d1117;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-/* 코드 블록 */
-/* हिंदी: Code दिखाने वाला black box */
-.markdown-content pre {
-  background: #0d1117;
-  color: #e2e8f0;
-  padding: 55px 18px 18px;
-  margin: 0;
-  overflow-x: auto;
-  border-radius: 10px;
-}
-
-/* 코드 글꼴 */
-/* हिंदी: Code का font */
-.markdown-content pre code {
-  background: transparent;
-  color: inherit;
-  font-family: Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-/* 코드 복사 버튼 */
-/* हिंदी: Black box के अंदर Copy Code button */
-.markdown-content .copy-code-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  z-index: 2;
-  padding: 7px 13px;
+.typing-indicator {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
   background: #7664e8;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  transition: background 0.2s ease;
 }
 
-.markdown-content .copy-code-btn:hover {
+/* =========================================
+   CHAT INPUT FOOTER
+   हिंदी: Message लिखने और भेजने का area
+========================================= */
+
+.chat-footer {
+  flex-shrink: 0;
+  padding: 16px 25px 10px;
+  background: #ffffff;
+  border-top: 1px solid #ececf2;
+}
+
+.input-container {
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 7px 8px 7px 18px;
+  background: #ffffff;
+  border: 1px solid #dedfea;
+  border-radius: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.input-container:focus-within {
+  border-color: #7664e8;
+  box-shadow: 0 0 0 3px rgba(118, 100, 232, 0.08);
+}
+
+.input-container input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #20243a;
+  font-size: 14px;
+}
+
+.input-container input::placeholder {
+  color: #999bad;
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 11px;
+  background: #7664e8;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) {
   background: #5d48d5;
 }
 
-/* 인라인 코드 */
-/* हिंदी: Paragraph के अंदर छोटे code की styling */
-.markdown-content :not(pre) > code {
-  background: #eef2ff;
-  color: #5b4bdb;
-  padding: 2px 6px;
-  border-radius: 4px;
+.send-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
+.input-footer-text {
+  margin: 8px 0 0;
+  text-align: center;
+  color: #999bad;
+  font-size: 10px;
+}
 
-  .chat-header {
-    gap: 10px;
-    padding: 12px;
-  }
+/* =========================================
+   LOADING
+   हिंदी: Conversation loading animation
+========================================= */
 
-  .online-status {
-    display: none;
-  }
+.conversation-loading {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #85899b;
+  font-size: 13px;
+}
 
-  .chat-footer {
-    padding: 12px;
-  }
+.loading-spinner {
+  width: 25px;
+  height: 25px;
+  border: 3px solid #e8e4ff;
+  border-top-color: #7664e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
-  .message-bubble {
-    max-width: 95%;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
+/* =========================================
+   ERROR MESSAGE
+   हिंदी: Error दिखाने की styling
+========================================= */
 
-/* 코드 블록 컨테이너 */
-/* हिंदी: पूरे code block का container */
-.markdown-content .code-block-wrapper,
+.error-message {
+  max-width: 850px;
+  margin: 15px auto;
+  padding: 12px;
+  border-radius: 9px;
+  background: #fff0f0;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+/* =========================================
+   MARKDOWN CONTENT
+   हिंदी: AI के formatted answers की styling
+========================================= */
+
+.markdown-content {
+  width: 100%;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  color: #20243a;
+  margin-top: 20px;
+}
+
+.markdown-content p {
+  margin: 8px 0 14px;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 24px;
+}
+
+.markdown-content a {
+  color: #6653d6;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 9px 12px;
+  border: 1px solid #dedfea;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: #f0edff;
+  color: #303047;
+}
+
+.markdown-content blockquote {
+  margin: 12px 0;
+  padding: 10px 15px;
+  border-left: 4px solid #7664e8;
+  background: #f0edff;
+  border-radius: 5px;
+}
+
+/* =========================================
+   CODE BLOCK
+   हिंदी: AI के code blocks की styling
+========================================= */
+
 .code-block-wrapper {
   position: relative;
   width: 100%;
-  margin: 20px 0;
+  margin: 18px 0;
   background: #0d1117;
   border-radius: 10px;
   overflow: hidden;
 }
 
-/* 코드 블록 헤더 */
-/* हिंदी: Code box के ऊपर का header */
 .code-block-header {
   display: flex;
   justify-content: space-between;
@@ -258,12 +658,10 @@
   border-bottom: 1px solid #30363d;
 }
 
-/* Copy 버튼 */
-/* हिंदी: Copy Code button की styling */
 .copy-code-btn {
   padding: 7px 13px;
   background: #7664e8;
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -276,8 +674,6 @@
   background: #5d48d5;
 }
 
-/* 코드 영역 */
-/* हिंदी: Black box के अंदर code */
 .code-block-wrapper pre {
   margin: 0;
   padding: 18px;
@@ -287,36 +683,429 @@
   white-space: pre;
 }
 
-.code-block-wrapper pre code {
+.code-block-wrapper pre code.hljs {
+  display: block;
   background: transparent;
   color: inherit;
+  padding: 0;
   font-family: Consolas, monospace;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
 }
 
-/* Inline code */
-/* हिंदी: Paragraph के अंदर छोटे code की styling */
 .markdown-content :not(pre) > code {
   background: #eef2ff;
   color: #5b4bdb;
   padding: 2px 6px;
   border-radius: 4px;
 }
-/* 코드 하이라이팅 스타일 */
-/* हिंदी: Syntax highlighting के colors को सही दिखाता है। */
-.code-block-wrapper pre {
-  background: #0d1117;
-  margin: 0;
-  padding: 18px;
-  overflow-x: auto;
+
+/* =========================================
+   SCROLLBAR
+   हिंदी: Sidebar और Chat scrollbar
+========================================= */
+
+.chat-body::-webkit-scrollbar,
+.chat-sidebar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.code-block-wrapper pre code.hljs {
-  display: block;
+.chat-body::-webkit-scrollbar-thumb,
+.chat-sidebar::-webkit-scrollbar-thumb {
+  background: #d8d5e5;
+  border-radius: 10px;
+}
+
+/* =========================================
+   TABLET RESPONSIVE
+   हिंदी: Tablet screen के लिए styling
+========================================= */
+
+@media (max-width: 900px) {
+
+  .chat-sidebar {
+    width: 230px;
+    min-width: 230px;
+  }
+
+  .chat-body {
+    padding: 22px 16px;
+  }
+
+  .chat-footer {
+    padding: 14px 16px 10px;
+  }
+
+}
+
+/* =========================================
+   MOBILE RESPONSIVE
+   हिंदी: Mobile screen के लिए styling
+========================================= */
+
+@media (max-width: 600px) {
+
+  .chat-page {
+    height: 100dvh;
+  }
+
+  .chat-header {
+    height: 62px;
+    min-height: 62px;
+    padding: 0 10px;
+    gap: 9px;
+  }
+
+  .sidebar-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .agent-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 19px;
+  }
+
+  .agent-info {
+    gap: 7px;
+  }
+
+  .agent-info h2 {
+    font-size: 13px;
+  }
+
+  .agent-info small {
+    font-size: 10px;
+  }
+
+  .online-status {
+    display: none;
+  }
+
+  .chat-sidebar {
+    width: 155px;
+    min-width: 155px;
+    padding: 12px 7px;
+    gap: 9px;
+  }
+
+  .new-chat-button {
+    padding: 11px 5px;
+    font-size: 12px;
+  }
+
+  .history-heading h3 {
+    font-size: 12px;
+  }
+
+  .history-item {
+    padding: 9px 7px;
+  }
+
+  .history-title {
+    font-size: 11px;
+  }
+
+  .history-item small {
+    font-size: 9px;
+  }
+
+  .chat-body {
+    padding: 18px 10px;
+  }
+
+  .message-bubble {
+    max-width: 95%;
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  .chat-welcome h2 {
+    font-size: 18px;
+  }
+
+  .chat-welcome p,
+  .chat-welcome span {
+    font-size: 12px;
+  }
+
+  .chat-footer {
+    padding: 10px 8px;
+  }
+
+  .input-container {
+    padding: 5px 6px 5px 12px;
+    gap: 7px;
+  }
+
+  .input-container input {
+    font-size: 12px;
+  }
+
+  .send-button {
+    width: 35px;
+    height: 35px;
+  }
+
+  .input-footer-text {
+    font-size: 9px;
+  }
+
+  .sidebar-collapsed .chat-sidebar {
+    width: 60px;
+    min-width: 60px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+}
+
+/* =========================================
+   SMALL MOBILE
+   हिंदी: छोटी mobile screens के लिए styling
+========================================= */
+
+@media (max-width: 380px) {
+
+  .chat-sidebar {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .history-title {
+    font-size: 10px;
+  }
+
+  .chat-header {
+    gap: 6px;
+  }
+
+  .chat-header .sidebar-toggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .chat-sidebar .back-button {
+    font-size: 11px;
+  }
+
+}
+
+// =========================================
+// CHAT HISTORY DELETE BUTTONS
+// हिंदी: Chat history के delete buttons की styling
+// =========================================
+
+.history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.clear-history-btn {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border: 1px solid #f2d5d8;
+  border-radius: 6px;
+  background: #fff5f5;
+  color: #dc4545;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: #dc4545;
+  color: #ffffff;
+  border-color: #dc4545;
+}
+
+// Conversation item और delete button को साथ रखता है।
+.history-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  border-radius: 9px;
+  transition: background 0.2s ease;
+}
+
+.history-item-wrapper:hover {
+  background: #f7f5ff;
+}
+
+.history-item-wrapper.active {
+  background: #f0edff;
+}
+
+.history-item-wrapper .history-item {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+// Delete button
+.delete-chat-btn {
+  width: 30px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 7px;
   background: transparent;
-  padding: 0;
-  font-family: Consolas, monospace;
+  color: #999bad;
   font-size: 14px;
-  line-height: 1.7;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.history-item-wrapper:hover .delete-chat-btn {
+  opacity: 1;
+}
+
+.delete-chat-btn:hover {
+  background: #ffe8e8;
+  color: #dc2626;
+}
+
+// Collapsed sidebar
+.sidebar-collapsed .history-heading {
+  justify-content: center;
+}
+
+.sidebar-collapsed .history-item-wrapper {
+  position: relative;
+  justify-content: center;
+  background: transparent;
+}
+
+.sidebar-collapsed .history-item-wrapper .history-item {
+  flex: none;
+  width: 44px;
+  justify-content: center;
+}
+
+.sidebar-collapsed .delete-chat-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 23px;
+  height: 23px;
+  z-index: 2;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  background: #fff0f0;
+  color: #dc2626;
+  font-size: 11px;
+  opacity: 0;
+}
+
+.sidebar-collapsed .history-item-wrapper:hover .delete-chat-btn {
+  opacity: 1;
+}
+
+// Mobile screens
+@media (max-width: 600px) {
+
+  .clear-history-btn {
+    padding: 5px 6px;
+    font-size: 9px;
+  }
+
+  .delete-chat-btn {
+    width: 26px;
+    font-size: 12px;
+    opacity: 1;
+  }
+
+  .history-item-wrapper {
+    gap: 2px;
+  }
+
+  .sidebar-collapsed .delete-chat-btn {
+    opacity: 1;
+  }
+}
+
+// Single combined history box
+.history-item-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.history-item-wrapper:hover {
+  background: #f7f5ff;
+  border-color: #eee9ff;
+}
+
+.history-item-wrapper.active {
+  background: #f0edff;
+  border-color: #d9d1ff;
+}
+
+.history-item-wrapper .history-item {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.history-item-wrapper .history-item:hover,
+.history-item-wrapper .history-item.active {
+  background: transparent;
+  border-color: transparent;
+}
+
+.delete-chat-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #9992b2;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: all 0.25s ease;
+}
+
+.history-item-wrapper:hover .delete-chat-btn,
+.history-item-wrapper.active .delete-chat-btn {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.delete-chat-btn:hover {
+  background: #ffe9ec;
+  color: #dc4545;
+}
+
+@media (max-width: 600px) {
+  .delete-chat-btn {
+    opacity: 1;
+    transform: none;
+  }
 }

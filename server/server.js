@@ -5,6 +5,11 @@ const mongoose = require('mongoose');
 const dns = require('dns');
 const Agent = require('./models/Agent');
 
+// 대화 및 메시지 모델을 가져옵니다.
+// हिंदी: Conversation और Message के MongoDB models import करता है।
+const Conversation = require('./models/Conversation');
+const Message = require('./models/Message');
+
 require('dotenv').config();
 
 const app = express();
@@ -165,7 +170,6 @@ app.delete('/api/agents/:id', async (req, res) => {
 });
 
 
-
 // 에이전트 정보를 수정합니다.
 // हिंदी: MongoDB में existing Agent की details update करता है।
 app.put('/api/agents/:id', async (req, res) => {
@@ -231,6 +235,316 @@ app.put('/api/agents/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Unable to update agent.'
+    });
+  }
+});
+
+
+// 새로운 대화를 생성합니다.
+// हिंदी: किसी Agent के लिए नई conversation MongoDB में create करता है।
+app.post('/api/agents/:agentId/conversations', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    // Agent ID가 유효한지 확인합니다.
+    // हिंदी: Agent ID valid है या नहीं check करता है।
+    if (!mongoose.isValidObjectId(agentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID.'
+      });
+    }
+
+    // Agent가 MongoDB에 존재하는지 확인합니다.
+    // हिंदी: Check करता है कि Agent MongoDB में मौजूद है।
+    const agent = await Agent.findById(agentId);
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found.'
+      });
+    }
+
+    // 새로운 conversation을 저장합니다.
+    // हिंदी: नई conversation MongoDB में save करता है।
+    const conversation = await Conversation.create({
+      agentId,
+      title: req.body.title?.trim() || 'New Chat'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Conversation created successfully.',
+      conversation
+    });
+
+  } catch (error) {
+    console.error('Create Conversation Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to create conversation.'
+    });
+  }
+});
+
+
+// Agent의 모든 대화 목록을 가져옵니다.
+// हिंदी: किसी Agent की सभी पुरानी conversations लाता है।
+app.get('/api/agents/:agentId/conversations', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    // Agent ID가 유효한지 확인합니다.
+    // हिंदी: Agent ID validate करता है।
+    if (!mongoose.isValidObjectId(agentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID.'
+      });
+    }
+
+    // Agent가 존재하는지 확인합니다.
+    // हिंदी: Agent की मौजूदगी check करता है।
+    const agent = await Agent.findById(agentId);
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found.'
+      });
+    }
+
+    // 해당 Agent의 대화 목록을 가져옵니다.
+    // हिंदी: केवल इसी Agent की conversations लाता है।
+    const conversations = await Conversation.find({ agentId })
+      .sort({ updatedAt: -1 });
+
+    res.json({
+      success: true,
+      conversations
+    });
+
+  } catch (error) {
+    console.error('Get Conversations Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to fetch conversations.'
+    });
+  }
+});
+
+
+// 특정 대화와 모든 메시지를 삭제합니다.
+// हिंदी: एक conversation और उसके सभी messages delete करता है।
+app.delete('/api/conversations/:conversationId', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    // 대화 ID가 유효한지 확인합니다.
+    // हिंदी: Conversation ID valid है या नहीं check करता है।
+    if (!mongoose.isValidObjectId(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid conversation ID.'
+      });
+    }
+
+    // 삭제할 대화를 찾습니다.
+    // हिंदी: Delete की जाने वाली conversation को ढूँढता है।
+    const conversation = await Conversation.findById(conversationId);
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found.'
+      });
+    }
+
+    // 대화에 연결된 모든 메시지를 삭제합니다.
+    // हिंदी: इस conversation के सभी messages delete करता है।
+    await Message.deleteMany({ conversationId });
+
+    // 대화를 삭제합니다.
+    // हिंदी: MongoDB से conversation delete करता है।
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.json({
+      success: true,
+      message: 'Conversation deleted successfully.'
+    });
+
+  } catch (error) {
+    console.error('Delete Conversation Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to delete conversation.'
+    });
+  }
+});
+
+
+// 특정 Agent의 모든 대화와 메시지를 삭제합니다.
+// हिंदी: Current Agent की पूरी chat history और messages delete करता है।
+app.delete('/api/agents/:agentId/conversations', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    // Agent ID가 유효한지 확인합니다.
+    // हिंदी: Agent ID valid है या नहीं check करता है।
+    if (!mongoose.isValidObjectId(agentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid agent ID.'
+      });
+    }
+
+    // Agent가 존재하는지 확인합니다.
+    // हिंदी: Check करता है कि Agent मौजूद है।
+    const agent = await Agent.findById(agentId);
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found.'
+      });
+    }
+
+    // 해당 Agent의 모든 대화 ID를 가져옵니다.
+    // हिंदी: इस Agent की सभी conversations की IDs लाता है।
+    const conversations = await Conversation.find({ agentId }).select('_id');
+    const conversationIds = conversations.map(conversation => conversation._id);
+
+    // 해당 대화들의 모든 메시지를 삭제합니다.
+    // हिंदी: इन conversations के सभी messages delete करता है।
+    await Message.deleteMany({
+      conversationId: { $in: conversationIds }
+    });
+
+    // 해당 Agent의 모든 대화를 삭제합니다.
+    // हिंदी: इस Agent की सभी conversations delete करता है।
+    await Conversation.deleteMany({ agentId });
+
+    res.json({
+      success: true,
+      message: 'All chat history deleted successfully.'
+    });
+
+  } catch (error) {
+    console.error('Delete All Conversations Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to delete chat history.'
+    });
+  }
+});
+
+
+// 새로운 메시지를 저장합니다.
+// हिंदी: User या AI का message MongoDB में save करता है।
+app.post('/api/conversations/:conversationId/messages', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { role, content } = req.body;
+
+    if (!mongoose.isValidObjectId(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid conversation ID.'
+      });
+    }
+
+    if (!['user', 'assistant'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid message role.'
+      });
+    }
+
+    if (typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message content is required.'
+      });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found.'
+      });
+    }
+
+    const message = await Message.create({
+      conversationId,
+      role,
+      content: content.trim()
+    });
+
+    // 대화의 수정 시간을 업데이트합니다.
+    // हिंदी: Conversation की updatedAt date update करता है।
+    conversation.updatedAt = new Date();
+    await conversation.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Message saved successfully.',
+      data: message
+    });
+
+  } catch (error) {
+    console.error('Save Message Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to save message.'
+    });
+  }
+});
+
+
+// 기존 대화의 모든 메시지를 가져옵니다.
+// हिंदी: किसी conversation के सभी पुराने messages लाता है।
+app.get('/api/conversations/:conversationId/messages', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    if (!mongoose.isValidObjectId(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid conversation ID.'
+      });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found.'
+      });
+    }
+
+    const messages = await Message.find({ conversationId })
+      .sort({ createdAt: 1 });
+
+    res.json({
+      success: true,
+      messages
+    });
+
+  } catch (error) {
+    console.error('Get Messages Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to fetch messages.'
     });
   }
 });

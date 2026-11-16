@@ -53,6 +53,13 @@ export interface DeleteAgentResponse {
   message: string;
 }
 
+// 대화 삭제 응답 데이터입니다.
+// हिंदी: Chat या पूरी history delete होने के बाद मिलने वाला response।
+export interface DeleteConversationResponse {
+  success: boolean;
+  message: string;
+}
+
 // 채팅 요청 데이터입니다.
 // हिंदी: Chat API को भेजे जाने वाले data का structure।
 export interface ChatRequest {
@@ -69,19 +76,56 @@ export interface ChatResponse {
   reply: string;
 }
 
+// 대화 데이터 구조입니다.
+// हिंदी: Conversation का data structure।
+export interface MongoConversation {
+  _id: string;
+  agentId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 메시지 데이터 구조입니다.
+// हिंदी: MongoDB में save होने वाले message का structure।
+export interface MongoMessage {
+  _id: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 대화 및 메시지 응답 구조입니다.
+// हिंदी: Conversation और messages API का response structure।
+export interface ConversationsResponse {
+  success: boolean;
+  conversations: MongoConversation[];
+}
+
+export interface MessagesResponse {
+  success: boolean;
+  messages: MongoMessage[];
+}
+
+export interface SaveMessageResponse {
+  success: boolean;
+  message: string;
+  data: MongoMessage;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  // 로컬 백엔드 주소입니다.
-  // हिंदी: Local development में local backend से connect करता है।
- // API 서버 주소입니다.
-// हिंदी: Local और Production के लिए सही Backend URL चुनता है।
-private readonly apiUrl =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
-    : 'https://myagent-ai.onrender.com/api';
+  // API 서버 주소입니다.
+  // हिंदी: Local और Production के लिए सही Backend URL चुनता है।
+  private readonly apiUrl =
+    window.location.hostname === 'localhost'
+      ? 'http://localhost:3000/api'
+      : 'https://myagent-ai.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
@@ -118,18 +162,17 @@ private readonly apiUrl =
     );
   }
 
-
   // 에이전트 정보를 수정합니다.
-// हिंदी: Existing Agent की details update करता है।
-updateAgent(
-  id: string,
-  data: CreateAgentRequest
-): Observable<CreateAgentResponse> {
-  return this.http.put<CreateAgentResponse>(
-    `${this.apiUrl}/agents/${id}`,
-    data
-  );
-}
+  // हिंदी: Existing Agent की details update करता है।
+  updateAgent(
+    id: string,
+    data: CreateAgentRequest
+  ): Observable<CreateAgentResponse> {
+    return this.http.put<CreateAgentResponse>(
+      `${this.apiUrl}/agents/${id}`,
+      data
+    );
+  }
 
   // Gemini AI에 메시지를 전송합니다.
   // हिंदी: User का message Gemini AI को भेजता है।
@@ -139,4 +182,66 @@ updateAgent(
       data
     );
   }
+
+  // 새로운 대화를 생성합니다.
+  // हिंदी: किसी Agent के लिए नई conversation बनाता है।
+  createConversation(
+    agentId: string,
+    title = 'New Chat'
+  ): Observable<{ success: boolean; conversation: MongoConversation }> {
+    return this.http.post<{ success: boolean; conversation: MongoConversation }>(
+      `${this.apiUrl}/agents/${agentId}/conversations`,
+      { title }
+    );
+  }
+
+  // Agent의 모든 대화 목록을 가져옵니다.
+  // हिंदी: Agent की सभी पुरानी conversations लाता है।
+  getConversations(agentId: string): Observable<ConversationsResponse> {
+    return this.http.get<ConversationsResponse>(
+      `${this.apiUrl}/agents/${agentId}/conversations`
+    );
+  }
+
+  // 메시지를 MongoDB에 저장합니다.
+  // हिंदी: User या AI message को MongoDB में save करता है।
+  saveMessage(
+    conversationId: string,
+    role: 'user' | 'assistant',
+    content: string
+  ): Observable<SaveMessageResponse> {
+    return this.http.post<SaveMessageResponse>(
+      `${this.apiUrl}/conversations/${conversationId}/messages`,
+      { role, content }
+    );
+  }
+
+  // 기존 대화의 메시지를 가져옵니다.
+  // हिंदी: पुरानी conversation के सभी messages लाता है।
+  getMessages(conversationId: string): Observable<MessagesResponse> {
+    return this.http.get<MessagesResponse>(
+      `${this.apiUrl}/conversations/${conversationId}/messages`
+    );
+  }
+
+  // 하나의 대화와 모든 메시지를 삭제합니다.
+  // हिंदी: एक conversation और उसके सभी messages delete करता है।
+  deleteConversation(
+    conversationId: string
+  ): Observable<DeleteConversationResponse> {
+    return this.http.delete<DeleteConversationResponse>(
+      `${this.apiUrl}/conversations/${conversationId}`
+    );
+  }
+
+  // 특정 Agent의 모든 대화와 메시지를 삭제합니다.
+  // हिंदी: Current Agent की पूरी chat history और messages delete करता है।
+  deleteAllConversations(
+    agentId: string
+  ): Observable<DeleteConversationResponse> {
+    return this.http.delete<DeleteConversationResponse>(
+      `${this.apiUrl}/agents/${agentId}/conversations`
+    );
+  }
+
 }

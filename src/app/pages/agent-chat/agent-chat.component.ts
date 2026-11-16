@@ -1,16 +1,23 @@
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { DatePipe } from '@angular/common';
 
 import {
   Component,
   EventEmitter,
   Input,
-  Output
+  Output,
+  OnInit
 } from '@angular/core';
 
+import {
+  ApiService,
+  MongoConversation,
+  MongoMessage
+} from '../../services/api.service';
+
 import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../services/api.service';
 
 import hljs from 'highlight.js/lib/core';
 
@@ -65,11 +72,11 @@ interface Agent {
 @Component({
   selector: 'app-agent-chat',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe],
   templateUrl: './agent-chat.component.html',
   styleUrl: './agent-chat.component.scss'
 })
-export class AgentChatComponent {
+export class AgentChatComponent implements OnInit {
 
   @Input() agent!: Agent;
   @Output() back = new EventEmitter<void>();
@@ -80,7 +87,106 @@ export class AgentChatComponent {
   isLoading = false;
   errorMessage = '';
 
+  // 대화 목록과 현재 대화를 관리합니다.
+  // हिंदी: Chat history और currently selected conversation manage करता है।
+  conversations: MongoConversation[] = [];
+
+  selectedConversationId: string | null = null;
+
+  isHistoryLoading = false;
+  isConversationLoading = false;
+
+  // 사이드바 열림 상태를 관리합니다.
+  // हिंदी: Sidebar खुला है या बंद, यह manage करता है।
+  isSidebarCollapsed = false;
+
   constructor(private apiService: ApiService) {}
+
+  // 사이드바를 열거나 닫습니다.
+  // हिंदी: Sidebar को open और close करता है।
+  toggleSidebar(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+  }
+
+  // 컴포넌트가 시작될 때 대화 목록을 불러옵니다.
+  // हिंदी: Chat component खुलने पर उस Agent की history लाता है।
+  ngOnInit(): void {
+    this.loadConversations();
+  }
+
+  // 해당 Agent의 모든 대화를 가져옵니다.
+  // हिंदी: Current Agent की सभी conversations load करता है।
+  loadConversations(): void {
+    this.isHistoryLoading = true;
+
+    this.apiService.getConversations(this.agent.id).subscribe({
+      next: (response) => {
+        this.conversations = response.conversations || [];
+        this.isHistoryLoading = false;
+      },
+      error: (error) => {
+        console.error('Load Conversations Error:', error);
+        this.errorMessage = 'Unable to load chat history.';
+        this.isHistoryLoading = false;
+      }
+    });
+  }
+
+  // 새로운 대화를 시작합니다.
+  // हिंदी: बिना message भेजे केवल खाली chat screen खोलता है।
+  // MongoDB में conversation तभी बनेगी जब user पहला message भेजेगा।
+  startNewChat(): void {
+    if (this.isConversationLoading || this.isLoading) {
+      return;
+    }
+
+    // 현재 선택된 conversation을 초기화합니다.
+    // हिंदी: पुरानी selected conversation को reset करता है।
+    this.selectedConversationId = null;
+
+    // 새 채팅 화면을 비웁니다.
+    // हिंदी: नई chat के लिए messages और input खाली करता है।
+    this.messages = [];
+    this.userMessage = '';
+    this.errorMessage = '';
+  }
+
+  // 기존 대화를 엽니다.
+  // हिंदी: History से पुरानी conversation खोलता है।
+  
+  // 기존 대화를 엽니다.
+  // हिंदी: History से पुरानी conversation खोलता है।
+  openConversation(conversation: MongoConversation): void {
+    this.selectedConversationId = conversation._id;
+    this.isConversationLoading = true;
+    this.errorMessage = '';
+
+    this.apiService.getMessages(conversation._id).subscribe({
+      next: (response) => {
+        this.messages = (response.messages || []).map(
+          (message: MongoMessage) => {
+            if (message.role === 'assistant') {
+              return this.formatAssistantMessage(message.content);
+            }
+
+            return {
+              role: 'user' as const,
+              content: message.content
+            };
+          }
+        );
+
+        this.userMessage = '';
+        this.isConversationLoading = false;
+      },
+      error: (error) => {
+        console.error('Load Messages Error:', error);
+        this.errorMessage = 'Unable to load this conversation.';
+        this.isConversationLoading = false;
+      }
+    });
+  }
+
 
   // 언어 이름을 표준화합니다.
   // हिंदी: अलग-अलग language names को एक standard नाम में बदलता है।
@@ -151,8 +257,12 @@ export class AgentChatComponent {
     return DOMPurify.sanitize(parsed);
   }
 
-  // AI 메시지를 전송합니다.
-  // हिंदी: User का message Backend और Gemini AI को भेजता है।
+  // =========================================
+  // OLD LOCAL CHAT CODE
+  // हिंदी: पुराना Local Chat code study के लिए सुरक्षित रखा है।
+  // =========================================
+
+  /*
   sendMessage(): void {
 
     const message = this.userMessage.trim();
@@ -181,78 +291,9 @@ export class AgentChatComponent {
 
         const reply = response.reply || '';
 
-        const parts: MessagePart[] = [];
-
-        // 코드 블록을 찾습니다.
-        // हिंदी: AI response में code blocks को पहचानता है।
-        const codeRegex = /```([^\r\n`]*)\r?\n([\s\S]*?)```/g;
-
-        let lastIndex = 0;
-        let match: RegExpExecArray | null;
-
-        while ((match = codeRegex.exec(reply)) !== null) {
-
-          const textBeforeCode = reply.slice(
-            lastIndex,
-            match.index
-          );
-
-          // 코드 앞의 일반 텍스트를 저장합니다.
-          // हिंदी: Code से पहले वाले सामान्य text को store करता है।
-          if (textBeforeCode.trim()) {
-
-            parts.push({
-              type: 'text',
-              content: textBeforeCode,
-              html: this.parseMarkdown(textBeforeCode)
-            });
-          }
-
-          const language = this.normalizeLanguage(match[1]);
-
-          const code = match[2].replace(/\r?\n$/, '');
-
-          // 코드에 색상을 적용합니다.
-          // हिंदी: Code में syntax highlighting लगाता है।
-          const highlightedHtml = DOMPurify.sanitize(
-            this.highlightCode(code, language),
-            {
-              ALLOWED_TAGS: ['span'],
-              ALLOWED_ATTR: ['class']
-            }
-          );
-
-          // 코드 블록을 저장합니다.
-          // हिंदी: Highlighted code को अलग से store करता है।
-          parts.push({
-            type: 'code',
-            content: code,
-            language,
-            highlightedHtml
-          });
-
-          lastIndex = codeRegex.lastIndex;
-        }
-
-        // 마지막 코드 뒤의 텍스트를 저장합니다.
-        // हिंदी: Last code block के बाद बचा हुआ text store करता है।
-        const remainingText = reply.slice(lastIndex);
-
-        if (remainingText.trim()) {
-
-          parts.push({
-            type: 'text',
-            content: remainingText,
-            html: this.parseMarkdown(remainingText)
-          });
-        }
-
-        // AI 응답을 채팅 목록에 추가합니다.
-        // हिंदी: AI का पूरा response chat में add करता है।
         this.messages.push({
           role: 'assistant',
-          content: reply,
-          parts
+          content: reply
         });
 
         this.isLoading = false;
@@ -270,6 +311,289 @@ export class AgentChatComponent {
       }
     });
   }
+  */
+
+  // AI 메시지를 전송하고 MongoDB에 저장합니다.
+  // हिंदी: User और AI दोनों के messages MongoDB में save करता है।
+  sendMessage(): void {
+
+    const message = this.userMessage.trim();
+
+    if (!message || this.isLoading || this.isConversationLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    // 대화 ID를 확인하고 메시지를 저장합니다.
+    // हिंदी: पहले conversation ID प्राप्त करके User message save करता है।
+    const saveUserMessage = (conversationId: string): void => {
+
+      this.selectedConversationId = conversationId;
+
+      this.apiService.saveMessage(
+        conversationId,
+        'user',
+        message
+      ).subscribe({
+
+        next: () => {
+
+          this.messages.push({
+            role: 'user',
+            content: message
+          });
+
+          this.userMessage = '';
+
+          // Gemini AI에 메시지를 전송합니다.
+          // हिंदी: User message save होने के बाद Gemini को भेजता है।
+          this.apiService.sendMessage({
+            message,
+            agentName: this.agent.name,
+            role: this.agent.role,
+            instructions: this.agent.instructions
+          }).subscribe({
+
+            next: (response) => {
+
+              const reply = response.reply || 'No response generated.';
+
+              // AI 응답을 MongoDB에 저장합니다.
+              // हिंदी: Gemini का reply MongoDB में save करता है।
+              this.apiService.saveMessage(
+                conversationId,
+                'assistant',
+                reply
+              ).subscribe({
+
+                next: () => {
+
+                  this.addAssistantReply(reply);
+                  this.isLoading = false;
+
+                  // 최신 대화가 위에 표시되도록 목록을 갱신합니다.
+                  // हिंदी: Updated conversation history को refresh करता है।
+                  this.loadConversations();
+                },
+
+                error: (error) => {
+
+                  console.error('Save AI Message Error:', error);
+
+                  this.addAssistantReply(reply);
+
+                  this.errorMessage =
+                    'AI replied, but its message could not be saved.';
+
+                  this.isLoading = false;
+                }
+              });
+            },
+
+            error: (error) => {
+
+              console.error('Chat API Error:', error);
+
+              this.errorMessage =
+                error.error?.message ||
+                'Unable to get AI response. Please try again.';
+
+              this.isLoading = false;
+            }
+          });
+        },
+
+        error: (error) => {
+
+          console.error('Save User Message Error:', error);
+
+          this.errorMessage = 'Unable to save your message.';
+          this.isLoading = false;
+        }
+      });
+    };
+
+    // 기존 대화가 있으면 사용하고, 없으면 새로 생성합니다.
+    // हिंदी: Conversation ID न होने पर पहली बार नई conversation बनाता है।
+    if (this.selectedConversationId) {
+
+      saveUserMessage(this.selectedConversationId);
+
+    } else {
+
+      this.apiService.createConversation(
+        this.agent.id,
+        message.slice(0, 40) || 'New Chat'
+      ).subscribe({
+
+        next: (response) => {
+
+          const conversation = response.conversation;
+
+          this.conversations = [
+            conversation,
+            ...this.conversations
+          ];
+
+          saveUserMessage(conversation._id);
+        },
+
+        error: (error) => {
+
+          console.error('Create Conversation Error:', error);
+
+          this.errorMessage = 'Unable to create a new conversation.';
+          this.isLoading = false;
+        }
+      });
+    }
+  }
+
+
+  // 하나의 대화와 모든 메시지를 삭제합니다.
+  // हिंदी: Selected conversation और उसके सभी messages delete करता है।
+  deleteConversation(conversation: MongoConversation, event: Event): void {
+    event.stopPropagation();
+
+    const confirmed = confirm(
+      `"${conversation.title}" chat को delete करना चाहते हैं? यह वापस नहीं आएगी।`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.apiService.deleteConversation(conversation._id).subscribe({
+      next: () => {
+
+        // 삭제된 대화를 목록에서 제거합니다.
+        // हिंदी: Deleted conversation को sidebar history से हटाता है।
+        this.conversations = this.conversations.filter(
+          item => item._id !== conversation._id
+        );
+
+        // 현재 열려 있는 대화라면 새 채팅 화면으로 이동합니다.
+        // हिंदी: अगर यही chat खुली थी, तो खाली New Chat screen दिखाता है।
+        if (this.selectedConversationId === conversation._id) {
+          this.selectedConversationId = null;
+          this.messages = [];
+          this.userMessage = '';
+        }
+
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('Delete Conversation Error:', error);
+        this.errorMessage = 'Unable to delete conversation. Please try again.';
+      }
+    });
+  }
+
+
+  // 현재 Agent의 모든 대화와 메시지를 삭제합니다.
+  // हिंदी: Current Agent की पूरी chat history और उसके messages delete करता है।
+  deleteAllConversations(): void {
+    if (this.conversations.length === 0) {
+      return;
+    }
+
+    const confirmed = confirm(
+      'क्या आप इस Agent की पूरी chat history delete करना चाहते हैं? यह वापस नहीं आएगी।'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.apiService.deleteAllConversations(this.agent.id).subscribe({
+      next: () => {
+
+        // 모든 대화를 화면에서도 초기화합니다.
+        // हिंदी: Sidebar history और current chat दोनों खाली करता है।
+        this.conversations = [];
+        this.selectedConversationId = null;
+        this.messages = [];
+        this.userMessage = '';
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('Delete All Conversations Error:', error);
+        this.errorMessage = 'Unable to clear chat history. Please try again.';
+      }
+    });
+  }
+
+
+  // AI 응답을 화면에 표시합니다.
+  // हिंदी: Gemini reply को Markdown और code highlighting के साथ दिखाता है।
+  
+  // AI 응답을 Markdown과 코드로 변환합니다.
+  // हिंदी: AI reply को formatted Markdown और code में बदलता है।
+  private formatAssistantMessage(reply: string): ChatMessage {
+    const parts: MessagePart[] = [];
+
+    const codeRegex = /```([^\r\n`]*)\r?\n([\s\S]*?)```/g;
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = codeRegex.exec(reply)) !== null) {
+      const textBeforeCode = reply.slice(lastIndex, match.index);
+
+      if (textBeforeCode.trim()) {
+        parts.push({
+          type: 'text',
+          content: textBeforeCode,
+          html: this.parseMarkdown(textBeforeCode)
+        });
+      }
+
+      const language = this.normalizeLanguage(match[1]);
+      const code = match[2].replace(/\r?\n$/, '');
+
+      const highlightedHtml = DOMPurify.sanitize(
+        this.highlightCode(code, language),
+        {
+          ALLOWED_TAGS: ['span'],
+          ALLOWED_ATTR: ['class']
+        }
+      );
+
+      parts.push({
+        type: 'code',
+        content: code,
+        language,
+        highlightedHtml
+      });
+
+      lastIndex = codeRegex.lastIndex;
+    }
+
+    const remainingText = reply.slice(lastIndex);
+
+    if (remainingText.trim()) {
+      parts.push({
+        type: 'text',
+        content: remainingText,
+        html: this.parseMarkdown(remainingText)
+      });
+    }
+
+    return {
+      role: 'assistant',
+      content: reply,
+      parts
+    };
+  }
+
+  // AI 응답을 화면에 추가합니다.
+  // हिंदी: Formatted AI reply को chat में add करता है।
+  private addAssistantReply(reply: string): void {
+    this.messages.push(this.formatAssistantMessage(reply));
+  }
+
 
   // 코드 복사 버튼을 처리합니다.
   // हिंदी: Copy Code button से code clipboard में copy करता है।
