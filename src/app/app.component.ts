@@ -61,10 +61,17 @@ export class AppComponent implements OnInit {
   selectedAgent: Agent | null = null;
 
   backendConnected = false;
+  databaseConnected = false;
   backendMessage = 'Checking connection...';
+
 
   agents: Agent[] = [];
 
+  // 대시보드 메시지 통계
+  // हिंदी: Dashboard में total saved messages की संख्या।
+  totalMessages = 0;
+  isStatsLoading = false;
+  totalConversations = 0;
   showCreateForm = false;
 
   // 수정할 에이전트 ID를 저장합니다.
@@ -111,7 +118,9 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.loadAgents();
     this.checkBackendConnection();
+    this.loadDashboardStats();
     this.initializeAppUpdates();
+    
   }
 
   // 앱의 새 버전을 확인합니다.
@@ -219,29 +228,72 @@ export class AppComponent implements OnInit {
     this.isMobileMenuOpen = false;
   }
 
-  // 백엔드 연결을 확인합니다.
-  // हिंदी: Backend connection check करता है।
+  // 백엔드와 데이터베이스 연결을 확인합니다.
+  // हिंदी: Backend और MongoDB दोनों का connection status check करता है।
   checkBackendConnection(): void {
 
     this.apiService.checkHealth().subscribe({
 
       next: (response) => {
         this.backendConnected = response.success;
+        this.databaseConnected = response.database === 'Connected';
+
         this.backendMessage = response.message;
 
-        if (response.database !== 'Connected') {
+        if (!this.databaseConnected) {
           this.backendMessage = 'Backend connected, database disconnected';
         }
       },
 
       error: () => {
         this.backendConnected = false;
+        this.databaseConnected = false;
         this.backendMessage = 'Backend connection failed';
       }
 
     });
 
   }
+
+  // 대시보드의 총 메시지 수를 가져옵니다.
+  // हिंदी: MongoDB से dashboard के total saved messages लाता है।
+// 대시보드 통계를 가져옵니다.
+// हिंदी: MongoDB से dashboard के total conversations और messages लाता है।
+loadDashboardStats(): void {
+
+  this.isStatsLoading = true;
+
+  this.apiService.getDashboardStats().subscribe({
+
+    next: (response) => {
+
+      if (response.success && response.stats) {
+
+        this.totalConversations =
+          response.stats.totalConversations;
+
+        this.totalMessages =
+          response.stats.totalMessages;
+
+      }
+
+      this.isStatsLoading = false;
+
+      console.log('Dashboard Stats:', response.stats);
+
+    },
+
+    error: (error) => {
+
+      console.error('Dashboard Stats Error:', error);
+
+      this.isStatsLoading = false;
+
+    }
+
+  });
+
+}
 
   // 에이전트 생성 폼을 엽니다.
   // हिंदी: नया Agent create करने का popup खोलता है।
@@ -476,9 +528,6 @@ export class AppComponent implements OnInit {
   हिंदी: यह पुराना code study के लिए comment किया गया है।
   ============================================================
 
-  // पुराने तरीके से नया Agent create करना।
-  // हिंदी: पहले Agent को केवल browser में save किया जाता था।
-
   createAgentUsingLocalStorage(): void {
 
     if (this.agentForm.invalid) {
@@ -502,9 +551,6 @@ export class AppComponent implements OnInit {
     this.closeCreateAgent();
   }
 
-  // 에이전트 목록을 LocalStorage에 저장합니다.
-  // हिंदी: Agent list को browser LocalStorage में save करता है।
-
   saveAgentsUsingLocalStorage(): void {
 
     localStorage.setItem(
@@ -513,9 +559,6 @@ export class AppComponent implements OnInit {
     );
 
   }
-
-  // 저장된 에이전트를 LocalStorage에서 불러옵니다.
-  // हिंदी: Browser LocalStorage से Agents load करता है।
 
   loadAgentsUsingLocalStorage(): void {
 
@@ -532,9 +575,6 @@ export class AppComponent implements OnInit {
     }
 
   }
-
-  // LocalStorage에서 Agent를 삭제합니다.
-  // हिंदी: Browser LocalStorage से Agent delete करता है।
 
   deleteAgentUsingLocalStorage(id: string): void {
 
@@ -569,6 +609,10 @@ export class AppComponent implements OnInit {
   closeChat(): void {
 
     this.selectedAgent = null;
+
+    // Chat से लौटने पर latest message count refresh करता है।
+    // हिंदी: Chat से वापस आने पर messages की नई संख्या लाता है।
+    this.loadDashboardStats();
 
   }
 

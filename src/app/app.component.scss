@@ -164,7 +164,7 @@ nav {
 /* हिंदी: Statistics cards की styling */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -674,4 +674,33 @@ nav {
 .edit-button:hover {
   background: #6366f1;
   color: #ffffff;
+}
+
+/* Topbar profile and database status */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.database-status-dot {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  transition: background-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.database-status-dot.connected {
+  background-color: #16a34a;
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.55);
+}
+
+.database-status-dot.disconnected {
+  background-color: #dc2626;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.45);
 }

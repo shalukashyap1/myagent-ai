@@ -86,7 +86,26 @@
 
         </div>
 
-        <div class="user-badge">S</div>
+        <div class="topbar-user">
+
+          <div class="user-badge">S</div>
+
+          <!-- 데이터베이스 연결 상태 표시 -->
+          <!-- हिंदी: MongoDB connection का green/red indicator -->
+          <span
+            class="database-status-dot"
+            [class.connected]="databaseConnected"
+            [class.disconnected]="!databaseConnected"
+            [title]="databaseConnected
+              ? 'Database Connected'
+              : 'Database Disconnected'"
+            role="status"
+            [attr.aria-label]="databaseConnected
+              ? 'Database Connected'
+              : 'Database Disconnected'">
+          </span>
+
+        </div>
 
       </header>
 
@@ -98,6 +117,8 @@
 
       <!-- 통계 카드 -->
       <!-- हिंदी: Dashboard statistics cards -->
+     <!-- 통계 카드 -->
+      <!-- हिंदी: Dashboard के सभी statistics cards -->
       <section class="stats-grid">
 
         <div class="stat-card">
@@ -109,7 +130,17 @@
         <div class="stat-card">
           <span>💬</span>
           <p>Total Conversations</p>
-          <h2>0</h2>
+          <h2>
+            {{ isStatsLoading ? '...' : totalConversations }}
+          </h2>
+        </div>
+
+        <div class="stat-card">
+          <span>✉️</span>
+          <p>Total Messages</p>
+          <h2>
+            {{ isStatsLoading ? '...' : totalMessages }}
+          </h2>
         </div>
 
         <div class="stat-card">
@@ -119,7 +150,9 @@
           <h2
             [class.ready]="backendConnected"
             [class.disconnected]="!backendConnected">
+
             {{ backendConnected ? 'Connected' : 'Disconnected' }}
+
           </h2>
 
           <small>{{ backendMessage }}</small>

@@ -135,8 +135,12 @@ app.post('/api/agents', async (req, res) => {
 
 // 에이전트를 삭제합니다.
 // हिंदी: MongoDB से Agent delete करता है।
+// 에이전트와 연결된 대화 및 메시지를 삭제합니다.
+// हिंदी: Agent के साथ उसकी सभी conversations और messages भी delete करता है।
 app.delete('/api/agents/:id', async (req, res) => {
+
   try {
+
     const { id } = req.params;
 
     if (!mongoose.isValidObjectId(id)) {
@@ -146,7 +150,7 @@ app.delete('/api/agents/:id', async (req, res) => {
       });
     }
 
-    const agent = await Agent.findByIdAndDelete(id);
+    const agent = await Agent.findById(id);
 
     if (!agent) {
       return res.status(404).json({
@@ -155,18 +159,40 @@ app.delete('/api/agents/:id', async (req, res) => {
       });
     }
 
+    const conversations = await Conversation.find({
+      agentId: id
+    }).select('_id');
+
+    const conversationIds = conversations.map(
+      conversation => conversation._id
+    );
+
+    await Message.deleteMany({
+      conversationId: { $in: conversationIds }
+    });
+
+    await Conversation.deleteMany({
+      agentId: id
+    });
+
+    await Agent.findByIdAndDelete(id);
+
     res.json({
       success: true,
-      message: 'Agent deleted successfully.'
+      message: 'Agent and its chat history deleted successfully.'
     });
+
   } catch (error) {
+
     console.error('Delete Agent Error:', error.message);
 
     res.status(500).json({
       success: false,
       message: 'Unable to delete agent.'
     });
+
   }
+
 });
 
 
@@ -592,6 +618,35 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// 대시보드 통계를 가져옵니다.
+// हिंदी: Dashboard के लिए MongoDB से total messages count लाता है।
+// 대시보드 통계를 가져옵니다.
+// हिंदी: MongoDB से total conversations और messages की संख्या लाता है।
+app.get('/api/dashboard/stats', async (req, res) => {
+  try {
+    const [totalConversations, totalMessages] = await Promise.all([
+      Conversation.countDocuments(),
+      Message.countDocuments()
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalConversations,
+        totalMessages
+      }
+    });
+
+  } catch (error) {
+    console.error('Dashboard Stats Error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      message: 'Unable to fetch dashboard statistics.'
+    });
+  }
+});
+
 // 데이터베이스 연결 후 서버를 실행합니다.
 // हिंदी: Database connect होने के बाद backend server start करता है।
 const startServer = async () => {
@@ -608,3 +663,6 @@ const startServer = async () => {
 };
 
 startServer();
+
+
+
